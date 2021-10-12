@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "560439947959",
+    "firebase_url": "https://memegenrator-690c0-default-rtdb.firebaseio.com",
+    "project_id": "memegenrator-690c0",
+    "storage_bucket": "memegenrator-690c0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:560439947959:android:25b050c0e65740137c5332",
+        "android_client_info": {
+          "package_name": "com.pebbletechsolutions.memegenrator"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "560439947959-5l654hnmk2vgoh9hfkn1bfimen4eraev.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pebbletechsolutions.memegenrator",
+            "certificate_hash": "534203c3af6181e6a1fe6449ebdb42b0a47c628d"
+          }
+        },
+        {
+          "client_id": "560439947959-gmkscsdm18r0l9btforfjndsiftbhtah.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAABqq2MRQ2BV-5BH7CfqENTCzCUmxEYzk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "560439947959-gmkscsdm18r0l9btforfjndsiftbhtah.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

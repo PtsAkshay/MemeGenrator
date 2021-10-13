@@ -3,7 +3,14 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/Android Projects/MemeGenrator/app/src/main/res/layout/activity_main.xml" value="0.27291666666666664" />
+        <entry key="..\:/Android Projects/MemeGenrator/app/src/main/res/drawable/btm_nav_bg.xml" value="0.2890625" />
+        <entry key="..\:/Android Projects/MemeGenrator/app/src/main/res/drawable/spalsh.xml" value="0.2890625" />
+        <entry key="..\:/Android Projects/MemeGenrator/app/src/main/res/layout/activity_main.xml" value="0.5" />
+        <entry key="..\:/Android Projects/MemeGenrator/app/src/main/res/layout/fragment_favourite.xml" value="0.27291666666666664" />
+        <entry key="..\:/Android Projects/MemeGenrator/app/src/main/res/layout/fragment_home.xml" value="0.25885416666666666" />
+        <entry key="..\:/Android Projects/MemeGenrator/app/src/main/res/layout/fragment_saved_images.xml" value="0.27291666666666664" />
+        <entry key="..\:/Android Projects/MemeGenrator/app/src/main/res/layout/home_recycler_item.xml" value="0.27291666666666664" />
+        <entry key="..\:/Android Projects/MemeGenrator/app/src/main/res/menu/btn_nav_meny.xml" value="0.27291666666666664" />
         <entry key="..\:/Android Projects/MemeGenrator/app/src/main/res/menu/top_app_bar_menu.xml" value="0.27291666666666664" />
       </map>
     </option>

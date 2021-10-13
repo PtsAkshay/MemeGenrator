@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">MemeGenrator</string>
+    <string name="app_bar_menu_one">Crop Face</string>
+    <string name="btn_nav_menu_one">Home</string>
+    <string name="btn_nav_menu_two">Saved Images</string>
+    <string name="btn_nav_menu_three">Favourite</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

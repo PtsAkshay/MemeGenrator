@@ -9,23 +9,131 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        app:liftOnScroll="true">
 
-        <com.google.android.material.appbar.MaterialToolbar
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="#fff"
-            app:title="Page Title"
-            app:titleCentered="true"
-            app:titleTextColor="#000"
-            app:menu="">
+            android:layout_height="wrap_content"
+            app:layout_scrollFlags="scroll|enterAlways|snap">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="#fff"
+                app:menu="@menu/top_app_bar_menu"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"/>
 
 
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:adjustViewBounds="true"
+                android:src="@drawable/blue_beauty_logo"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"/>
 
-        </com.google.android.material.appbar.MaterialToolbar>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 
     </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/homeNstdSV"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/FragContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+
+    </androidx.core.widget.NestedScrollView>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom">
+
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+            android:id="@+id/homeCreateFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/homeBtnNav"
+            app:layout_constraintRight_toRightOf="parent"
+            android:text="Create"
+            app:iconSize="20dp"
+            app:icon="@drawable/plus_icon"
+            android:textColor="#000"
+            android:textAlignment="center"
+            android:backgroundTint="#FF9800"
+            android:layout_marginEnd="15dp"
+            android:layout_marginBottom="20dp"/>
+
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+            android:id="@+id/homeSlctFileFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select Photo"
+            android:textColor="#fff"
+            android:textAllCaps="false"
+            app:icon="@drawable/file_svgrepo_com"
+            app:iconSize="24dp"
+            app:iconTint="#fff"
+            android:backgroundTint="#3F51B5"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/homeCreateFab"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="20dp"
+            android:visibility="gone"/>
+
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+            android:id="@+id/homeTakePhotoFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Take Photo"
+            android:textColor="#fff"
+            android:textAllCaps="false"
+            app:icon="@drawable/edit_svgrepo_com"
+            app:iconSize="24dp"
+            app:iconTint="#fff"
+            android:backgroundTint="#4CAF50"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/homeSlctFileFab"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="20dp"
+            android:visibility="gone"/>
+
+
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/homeBtnNav"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="@drawable/btm_nav_bg"
+            app:menu="@menu/btn_nav_meny"
+            app:labelVisibilityMode="selected"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"/>
+
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+
 
 
 

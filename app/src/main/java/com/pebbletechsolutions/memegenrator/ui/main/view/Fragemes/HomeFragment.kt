@@ -1,35 +1,50 @@
 package com.pebbletechsolutions.memegenrator.ui.main.view.Fragemes
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.Animation
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.database.*
 import com.pebbletechsolutions.memegenrator.R
 import com.pebbletechsolutions.memegenrator.data.model.MemeModel
+import com.pebbletechsolutions.memegenrator.databinding.CustomHomeItemDialogBinding
 import com.pebbletechsolutions.memegenrator.databinding.FragmentHomeBinding
 import com.pebbletechsolutions.memegenrator.ui.main.adapter.HomeRecyclerAdapter
+import com.pebbletechsolutions.memegenrator.ui.main.view.EditorActivity
+import com.pebbletechsolutions.memegenrator.utils.OnRecyclerItemClickListner
+import com.pebbletechsolutions.memegenrator.utils.startAnimation
 
 
-class HomeFragment : Fragment() {
+class HomeFragment : Fragment(), OnRecyclerItemClickListner {
 
     private var _homeFragBind: FragmentHomeBinding?=null
+    private var  DialogBind: CustomHomeItemDialogBinding? = null
     private val HomeBind get() = _homeFragBind
+    var customDialog: MaterialAlertDialogBuilder? = null
 
 
     private lateinit var ImgRef: DatabaseReference
     private lateinit var HomeRV: RecyclerView
-    private lateinit var MemeList: ArrayList<MemeModel>
+    private lateinit var MemeListData: MutableList<MemeModel>
+
+
+
 
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
 
     }
 
@@ -41,7 +56,11 @@ class HomeFragment : Fragment() {
         val view = HomeBind?.root
 
 
-        val MemeListData: MutableList<MemeModel> = arrayListOf()
+
+        customDialog = MaterialAlertDialogBuilder(requireContext())
+
+
+        MemeListData = arrayListOf()
         MemeListData.add(MemeModel(R.drawable.meme1))
         MemeListData.add(MemeModel(R.drawable.meme2))
         MemeListData.add(MemeModel(R.drawable.meme3))
@@ -77,7 +96,7 @@ class HomeFragment : Fragment() {
         MemeListData.add(MemeModel(R.drawable.meme33))
 
         _homeFragBind!!.homeRV.layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
-        _homeFragBind!!.homeRV.adapter = HomeRecyclerAdapter(MemeListData as ArrayList<MemeModel>)
+        _homeFragBind!!.homeRV.adapter = HomeRecyclerAdapter(MemeListData as ArrayList<MemeModel>, this)
 
         return view
     }
@@ -93,4 +112,33 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
     }
 
+    override fun onItemClick(position: Int) {
+        Toast.makeText(context, position.toString(), Toast.LENGTH_SHORT).show()
+        ShowCustomDialog(position)
+    }
+
+
+
+    override fun onItemLongClick(position: Int) {
+        TODO("Not yet implemented")
+    }
+
+
+    private fun ShowCustomDialog(position: Int) {
+        DialogBind = CustomHomeItemDialogBinding.inflate(layoutInflater)
+        val DialogView = DialogBind!!.root
+       customDialog!!.setView(DialogView)
+        DialogBind!!.dialogMemeImg.setImageResource(MemeListData[position].memeImg)
+        _homeFragBind!!.homeFragBlur.visibility = View.VISIBLE
+        customDialog!!.show()
+        val df = customDialog!!.create()
+        DialogBind!!.dialogBtnEdit.setOnClickListener {
+            Toast.makeText(context, "Edit Button Clicked", Toast.LENGTH_SHORT).show()
+            val i: Intent = Intent(context, EditorActivity::class.java)
+            i.putExtra("ClickedImg", MemeListData[position].memeImg)
+            startActivity(i)
+            df.dismiss()
+        }
+
+    }
 }

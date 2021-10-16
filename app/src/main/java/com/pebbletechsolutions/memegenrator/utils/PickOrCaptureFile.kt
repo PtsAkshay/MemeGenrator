@@ -25,6 +25,8 @@ class PickOrCaptureFile: AppCompatActivity() {
     val fileName: String = "memePhoto"
     var currentPhotoPath: String = ""
 
+    var isPhototaken = false
+
     private lateinit var takePhoto: ActivityResultLauncher<Intent>
 
 
@@ -48,6 +50,15 @@ class PickOrCaptureFile: AppCompatActivity() {
 
 
     }
+
+    fun pickImg(){
+        isPhototaken = false
+        val j =  Intent(Intent.ACTION_PICK)
+        j.type = "image/*"
+        startActivityForResult(j, 22)
+    }
+
+
 
 
 

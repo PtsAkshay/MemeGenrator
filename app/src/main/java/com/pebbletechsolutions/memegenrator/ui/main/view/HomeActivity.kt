@@ -44,6 +44,8 @@ class HomeActivity : AppCompatActivity() {
     val fileName: String = "memePhoto"
     var currentPhotoPath: String = ""
     var isPhototaken = false
+    val TAKE_PICTURE_CODE = 11
+    val PICK_IMAGE_CODE = 22
 
     private lateinit var takePhoto: ActivityResultLauncher<Intent>
 
@@ -143,16 +145,20 @@ class HomeActivity : AppCompatActivity() {
     private fun animateFab()
     {
         if (isFabOpen){
+            HABind.homeSlctFileFab.isClickable = false
             HABind.homeSlctFileFab.startAnimation(fabClose)
             HABind.homeSlctFileFab.visibility = View.GONE
+            HABind.homeTakePhotoFab.isClickable = false
             HABind.homeTakePhotoFab.startAnimation(fabClose)
             HABind.homeTakePhotoFab.visibility = View.GONE
             HABind.blurView.visibility = View.INVISIBLE
             HABind.blutView2.visibility = View.GONE
             isFabOpen = false
         }else{
+            HABind.homeSlctFileFab.isClickable = true
             HABind.homeSlctFileFab.startAnimation(fabOpen)
             HABind.homeSlctFileFab.visibility = View.VISIBLE
+            HABind.homeTakePhotoFab.isClickable = true
             HABind.homeTakePhotoFab.startAnimation(fabOpen)
             HABind.homeTakePhotoFab.visibility = View.VISIBLE
             HABind.blurView.visibility = View.VISIBLE
@@ -184,7 +190,7 @@ class HomeActivity : AppCompatActivity() {
             val i = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             i.putExtra(MediaStore.EXTRA_OUTPUT, imgUri)
 //            takePhoto.launch(i)
-            startActivityForResult(i, 11)
+            startActivityForResult(i, TAKE_PICTURE_CODE)
 
         }catch (e: IOException){
 
@@ -197,19 +203,19 @@ class HomeActivity : AppCompatActivity() {
         isPhototaken = false
         val j =  Intent(Intent.ACTION_PICK)
         j.type = "image/*"
-        startActivityForResult(j, 22)
+        startActivityForResult(j, PICK_IMAGE_CODE)
     }
 
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == RESULT_OK){
-            if (requestCode == 11){
+            if (requestCode == TAKE_PICTURE_CODE){
                 val u: Intent = Intent(this, EditorActivity::class.java)
                 u.putExtra("taken", isPhototaken)
                 u.putExtra("TakenPicture", currentPhotoPath)
                 startActivity(u)
-            }else if(requestCode == 22){
+            }else if(requestCode == PICK_IMAGE_CODE){
                 val pickUri: Uri = data?.data!!
                 Log.e("Picked", pickUri.toString())
                 val k = Intent(this@HomeActivity, EditorActivity::class.java)

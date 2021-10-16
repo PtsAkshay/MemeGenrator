@@ -8,12 +8,16 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import com.pebbletechsolutions.memegenrator.R
 import com.pebbletechsolutions.memegenrator.databinding.ActivityEditorBinding
+import com.pebbletechsolutions.memegenrator.ui.main.view.Fragemes.EditImageFrag
 
 class EditorActivity : AppCompatActivity() {
 
     private lateinit var editBind: ActivityEditorBinding
+    var bsImgUri = ""
+    var passMoreBundle = Bundle()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,26 +25,23 @@ class EditorActivity : AppCompatActivity() {
         val view =  editBind!!.root
         setContentView(view)
 
+        var intent = intent
+        bsImgUri = intent.extras?.get("fromHomeBs") as String
+        Log.e("im", bsImgUri)
+        passMoreBundle.putString("SlctImgUri", bsImgUri)
 
-        val bundle: Bundle? = intent.extras
-        if (bundle!=null){
-            if (bundle.getBoolean("taken")){
-                val imgInt = bundle.get("TakenPicture")
-                val bitmap: Bitmap = BitmapFactory.decodeFile(imgInt.toString())
-                editBind.editImg.setImageBitmap(bitmap)
-            }else {
-                val imgUri = bundle.get("pickedImage")
-                Log.e("Picked2", imgUri.toString())
-                editBind.editImg.setImageURI(imgUri as Uri?)
-            }
-        }else{
-            Toast.makeText(this, "No image Passed Or some erro ", Toast.LENGTH_LONG).show()
-        }
-
-        editBind.editBackImg.setOnClickListener {
-            startActivity(Intent(this@EditorActivity, HomeActivity::class.java))
-            finish()
-        }
+        replaceFragment(EditImageFrag())
 
     }
+
+
+    private fun replaceFragment(frag: Fragment) {
+        frag.arguments = passMoreBundle
+        val fragTransaction = supportFragmentManager.beginTransaction()
+        fragTransaction.replace(R.id.editFragContainer, frag)
+        fragTransaction.commit()
+
+    }
+
+
 }

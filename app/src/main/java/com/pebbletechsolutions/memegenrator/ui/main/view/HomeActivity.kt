@@ -88,9 +88,11 @@ class HomeActivity : AppCompatActivity() {
             {
                 R.id.btmNavHome -> {
                     replaceFragment(HomeFragment())
+                    HABind.homeCreateFab.visibility = View.VISIBLE
                 }
                 R.id.btnNavSI -> {
                     replaceFragment(SavedImagesFrag())
+                    HABind.homeCreateFab.visibility = View.GONE
                 }
                 R.id.btnNavFav -> {
                     replaceFragment(FavouriteFrag())

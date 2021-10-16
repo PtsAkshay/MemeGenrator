@@ -37,6 +37,9 @@
             android:name=".ui.main.view.HomeActivity"
             android:exported="false" />
 
+        <activity android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
+            android:theme="@style/Theme.MaterialComponents.Light"/>
+
 
         <provider
             android:authorities="com.pebbletechsolutions.memegenrator.fileprovider"

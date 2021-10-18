@@ -1,79 +1,71 @@
 package com.pebbletechsolutions.memegenrator.ui.main.view
 
-import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.net.Uri
+
+import android.R.attr
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.pebbletechsolutions.memegenrator.databinding.ActivityEditorBinding
-import com.pebbletechsolutions.memegenrator.ui.main.view.Fragemes.EditImageFrag
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.pebbletechsolutions.memegenrator.databinding.GetNameDialogLytBinding
+import androidx.core.app.ActivityCompat.startActivityForResult
 
-
-import android.app.ProgressDialog
-
-import android.widget.ImageView
-
-import android.widget.RelativeLayout
-
-import android.widget.TextView
-import com.pebbletechsolutions.memegenrator.utils.RotationGestureDetector
-import android.util.TypedValue
-import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener
+import android.content.Intent
+import android.R.attr.data
+import android.app.Activity
 import android.content.DialogInterface
 
-import android.R
-import android.graphics.Color
-
 import android.provider.MediaStore
-import android.view.*
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.lang.Exception
+
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.Typeface
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.text.format.DateFormat
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewTreeObserver
+import com.google.android.material.slider.Slider
+import top.defaults.colorpicker.ColorPickerView
 import top.defaults.colorpicker.ColorPickerPopup
 import top.defaults.colorpicker.ColorPickerPopup.ColorPickerObserver
-import top.defaults.colorpicker.ColorPickerView
+import java.util.*
+import android.R
+import android.content.ContentValues
+import android.content.Context
+import android.graphics.Canvas
+import android.widget.*
+
+import java.io.*
 
 
-class EditorActivity : AppCompatActivity(), RotationGestureDetector.OnRotationGestureListener {
+class EditorActivity : AppCompatActivity() {
+
+    private var mXDelta = 0
+    private var mYDelta = 0
+    private var mRootWidth = 0
+    private var mRootHeight = 0
+
+    private var xDelta: Int = 0
+    private var yDelta: Int = 0
+    private lateinit var touchListener: View.OnTouchListener
+    private var gatedUri = ""
+    private lateinit var mOnTouchListener: View.OnTouchListener
 
     private lateinit var editBind: ActivityEditorBinding
     var bsImgUri = ""
     var passMoreBundle = Bundle()
-
-
-    var IMAGE_IN_URI = "imageInURI"
-    var TEXT_TO_WRITE = "sourceText"
-    var TEXT_FONT_SIZE = "textFontSize"
-    var TEXT_COLOR = "textColor"
-    var IMAGE_OUT_URI = "imageOutURI"
-    var IMAGE_OUT_ERROR = "imageOutError"
-
-    var TEXT_ON_IMAGE_RESULT_OK_CODE = 1
-    var TEXT_ON_IMAGE_RESULT_FAILED_CODE = -1
-    var TEXT_ON_IMAGE_REQUEST_CODE = 4
-
-
-    private val TAG: String = EditorActivity::class.java.getSimpleName()
-    private val imageInUri: Uri? = null
-    private  var imageOutUri:android.net.Uri? = null
-    private val saveDir = "/tmp/"
-    private val textToWrite = ""
-    private  var textColor:kotlin.String? = "#ffffff"
-    private val textFontSize = 0f
-    var addTextView: TextView? = null
-    private var errorAny = ""
-    private var sourceImageView: ImageView? = null
-    private var workingLayout: RelativeLayout? = null
-    private  var baseLayout:RelativeLayout? = null
-    private var scaleGestureDetector: ScaleGestureDetector? = null
-    private var progressDialog: ProgressDialog? = null
-    private var mRotationGestureDetector: RotationGestureDetector? = null
+    private val IMAGE_REQ = 44
+    var textToAddImg = ""
+    var fontSize: Float = 0f
+    private lateinit var addingTextView: TextView
+    private lateinit var addNameDialog: MaterialAlertDialogBuilder
+    private var nameDialogBind: GetNameDialogLytBinding? = null
     private lateinit var colorPickerView: ColorPickerView
 
 
@@ -82,235 +74,262 @@ class EditorActivity : AppCompatActivity(), RotationGestureDetector.OnRotationGe
         editBind = ActivityEditorBinding.inflate(layoutInflater)
         val view = editBind.root
         setContentView(view)
-
-
-        addTextView = TextView(this)
+        addingTextView = TextView(this)
         colorPickerView = ColorPickerView(this)
-        scaleGestureDetector = ScaleGestureDetector(this@EditorActivity, simpleOnScaleGestureListener())
-        mRotationGestureDetector = RotationGestureDetector(this@EditorActivity)
-        uiSetup();
 
-        editBind.editDoneImg.setOnClickListener {
-            progressDialog!!.setMessage("Adding Text")
-            progressDialog!!.show()
-
-            //set the text
-            val doneSetting = setTextFinal()
-            if (doneSetting) {
-                val intent = Intent()
-                intent.putExtra(IMAGE_OUT_URI, imageOutUri.toString())
-                setResult(TEXT_ON_IMAGE_RESULT_OK_CODE, intent)
-                if (progressDialog!!.isShowing) {
-                    progressDialog!!.dismiss()
-                }
-                finish()
-            } else {
-                val intent = Intent()
-                intent.putExtra(IMAGE_OUT_ERROR, errorAny)
-                setResult(TEXT_ON_IMAGE_RESULT_FAILED_CODE, intent)
-                if (progressDialog!!.isShowing) {
-                    progressDialog!!.dismiss()
-                }
-                finish()
-            }
-        }
-
-
-        editBind.editBtnAddImg.setOnClickListener {
-            ColorPickerPopup.Builder(this)
-                .initialColor(Color.RED) // Set initial color
-                .enableBrightness(true) // Enable brightness slider or not
-                .enableAlpha(true) // Enable alpha slider or not
-                .okTitle("Choose")
-                .cancelTitle("Cancel")
-                .showIndicator(true)
-                .showValue(true)
-                .build()
-                .show(object : ColorPickerObserver() {
-                    override fun onColorPicked(color: Int) {
-                        colorPickerView.setBackgroundColor(color)
-                    }
-
-                    fun onColor(color: Int, fromUser: Boolean) {}
-                })
-        }
-
-
-            var intent = intent
-            bsImgUri = intent.extras?.get("fromHomeBs") as String
-            Log.e("im", bsImgUri)
+        var intent = intent
+        bsImgUri = intent.extras?.get("fromHomeBs") as String
+        Log.e("im", bsImgUri)
 //        passMoreBundle.putString("SlctImgUri", bsImgUri)
 
-            Glide.with(this).load(bsImgUri).into(editBind.editImg)
+        Glide.with(this).load(bsImgUri).into(editBind.editImg)
 
 //        replaceFragment(EditImageFrag())
 
-        }
 
-        override fun OnRotation(rotationDetector: RotationGestureDetector?) {
-            val angle: Float = rotationDetector!!.angle
-            addTextView!!.rotation = angle
-        }
+        addNameDialog = MaterialAlertDialogBuilder(this)
 
 
-        class simpleOnScaleGestureListener : SimpleOnScaleGestureListener() {
-            override fun onScale(detector: ScaleGestureDetector): Boolean {
-                //change the font size of the text on pinch
-                var size: Float = EditorActivity().addTextView!!.getTextSize()
-                val factor = detector.scaleFactor
-                val product = size * factor
-                EditorActivity().addTextView!!.setTextSize(TypedValue.COMPLEX_UNIT_PX, product)
-                size = EditorActivity().addTextView!!.getTextSize()
-                return true
-            }
-        }
-
-        override fun onTouchEvent(event: MotionEvent?): Boolean {
-            scaleGestureDetector!!.onTouchEvent(event)
-            mRotationGestureDetector!!.onTouchEvent(event!!)
-            return super.onTouchEvent(event)
-        }
-
-
-//    private fun replaceFragment(frag: Fragment) {
-//        frag.arguments = passMoreBundle
-//        val fragTransaction = supportFragmentManager.beginTransaction()
-//        fragTransaction.replace(R.id.editFragContainer, frag)
-//        fragTransaction.commit()
-//
-//    }
-
-        private fun uiSetup() {
-            //show progress dialog
-            progressDialog = ProgressDialog(this@EditorActivity)
-            progressDialog!!.setCancelable(false)
-            progressDialog!!.setMessage("Loading...")
-            progressDialog!!.show()
-
-            try {
-                //get the image bitmap
-                val bitmapForImageView =
-                    MediaStore.Images.Media.getBitmap(this.contentResolver, imageInUri)
-                var width = 0
-                var height = 0
-                //resize the views as per the image size
-                if (bitmapForImageView.width > bitmapForImageView.height) {
-                    width = 1280
-                    height = 720
-                } else if (bitmapForImageView.width < bitmapForImageView.height) {
-                    width = 720
-                    height = 1280
-                } else {
-                    width = 600
-                    height = 600
-                }
-
-                //create the layouts
-                //base layout
-                baseLayout = RelativeLayout(this@EditorActivity)
-                val baseLayoutParams = RelativeLayout.LayoutParams(
-                    RelativeLayout.LayoutParams.MATCH_PARENT,
-                    RelativeLayout.LayoutParams.MATCH_PARENT
-                )
-                baseLayout!!.setBackgroundColor(Color.parseColor("#000000"))
-
-                //working layout
-                workingLayout = RelativeLayout(this@EditorActivity)
-                val workingLayoutParams = RelativeLayout.LayoutParams(width, height)
-                workingLayoutParams.addRule(RelativeLayout.CENTER_IN_PARENT)
-                workingLayout!!.setLayoutParams(workingLayoutParams)
-
-
-                //textview
-                addTextView = TextView(this@EditorActivity)
-                val textViewParams = RelativeLayout.LayoutParams(
-                    RelativeLayout.LayoutParams.WRAP_CONTENT,
-                    RelativeLayout.LayoutParams.WRAP_CONTENT
-                )
-                textViewParams.addRule(RelativeLayout.CENTER_IN_PARENT)
-                addTextView!!.layoutParams = textViewParams
-
-                //add views to working layout
-                workingLayout!!.addView(sourceImageView)
-                workingLayout!!.addView(addTextView)
-
-                //add view to base layout
-                baseLayout!!.addView(workingLayout)
-
-                //set content view
-                setContentView(baseLayout, baseLayoutParams)
-                sourceImageView!!.setImageBitmap(bitmapForImageView)
-                workingLayout!!.setDrawingCacheEnabled(true)
-                if (progressDialog!!.isShowing()) {
-                    progressDialog!!.dismiss()
-                }
-            } catch (e: IOException) {
-                if (progressDialog!!.isShowing()) {
-                    progressDialog!!.dismiss()
-                }
-                e.printStackTrace()
-            }
-
-            //setup the text view
-            addTextView!!.text = textToWrite
-            addTextView!!.textSize = textFontSize
-            addTextView!!.setTextColor(Color.parseColor(textColor))
-            addTextView!!.setOnTouchListener(object : View.OnTouchListener {
-                var lastX = 0f
-                var lastY = 0f
-                override fun onTouch(p0: View?, p1: MotionEvent?): Boolean {
-                    when (p1!!.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            lastX = p1!!.x
-                            lastY = p1!!.y
-                        }
-                        MotionEvent.ACTION_MOVE -> {
-                            val dx = p1!!.x - lastX
-                            val dy = p1!!.y - lastY
-                            val finalX: Float = p0!!.getX() + dx
-                            val finalY: Float = p0!!.getY() + dy + p0!!.getHeight()
-                            p0!!.setX(finalX)
-                            p0!!.setY(finalY)
-                        }
+        mOnTouchListener =
+            View.OnTouchListener { view, event ->
+                val xScreenTouch = event.rawX.toInt() // x location relative to the screen
+                val yScreenTouch = event.rawY.toInt() // y location relative to the screen
+                when (event.action and MotionEvent.ACTION_MASK) {
+                    MotionEvent.ACTION_DOWN -> {
+                        val lParams = view.layoutParams as FrameLayout.LayoutParams
+                        mXDelta = xScreenTouch - lParams.leftMargin
+                        mYDelta = yScreenTouch - lParams.topMargin
                     }
-                    return true
+                    MotionEvent.ACTION_MOVE -> {
+                        val layoutParams = view
+                            .layoutParams as FrameLayout.LayoutParams
+                        layoutParams.leftMargin =
+                            Math.max(0, Math.min(mRootWidth - view.width, xScreenTouch - mXDelta))
+                        layoutParams.topMargin =
+                            Math.max(0, Math.min(mRootHeight - view.height, yScreenTouch - mYDelta))
+                        view.layoutParams = layoutParams
+                    }
                 }
+                true
+            }
 
+        editBind.editImgLyt.getViewTreeObserver()
+            .addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                        editBind.editImgLyt.getViewTreeObserver()
+                            .removeOnGlobalLayoutListener(this)
+                    }
+                    mRootWidth = editBind.editImgLyt.getWidth()
+                    mRootHeight = editBind.editImgLyt.getHeight()
+                }
             })
 
 
+        editBind.editBtnAddTxt.setOnClickListener {
+//            showAddNameDialog()
+            var txt = editBind.editGetTxt.text.toString()
+            editBind.editGetTxt.setText("")
+            createTextiew(txt)
+            editBind.editTxtCusView.visibility = View.VISIBLE
         }
 
-        fun setTextFinal(): Boolean {
-            addTextView!!.setOnTouchListener(null)
-            var toBeReturn = false
-            workingLayout!!.buildDrawingCache()
-            toBeReturn = saveFile(Bitmap.createBitmap(workingLayout!!.drawingCache), "temp.jpg")
-            return toBeReturn
+        editBind.editDoneImg.setOnClickListener {
+
         }
 
-        fun saveFile(sourceImageBitmap: Bitmap, fileName: String): Boolean {
-            var result = false
-            val path = applicationInfo.dataDir + saveDir
-            val pathFile = File(path)
-            pathFile.mkdirs()
-            val imageFile = File(path, fileName)
-            if (imageFile.exists()) {
-                imageFile.delete()
-            }
-            var out: FileOutputStream? = null
-            try {
-                out = FileOutputStream(imageFile)
-                sourceImageBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-                result = true
-            } catch (e: Exception) {
-                errorAny = e.message!!
-                result = false
-                e.printStackTrace()
-            }
-            imageOutUri = Uri.fromFile(imageFile)
-            return result
+        editBind.editChangeColor.setOnClickListener {
+            changeTextColor()
         }
+
+        editBind.editFontSizeSlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {
+
+            }
+
+            override fun onStopTrackingTouch(slider: Slider) {
+                addingTextView.setTextSize(fontSize)
+            }
+
+        })
+
+        editBind.editFontSizeSlider.addOnChangeListener { slider, value, fromUser ->
+            addingTextView.setTextSize(value)
+            fontSize = value
+        }
+
+        editBind.editChangeFontSize.setOnCheckedChangeListener { compoundButton, b ->
+            if (b) {
+                editBind.editFontSizeSlider.visibility = View.VISIBLE
+            } else {
+                editBind.editFontSizeSlider.visibility = View.GONE
+            }
+        }
+
+        editBind.editFontBold.setOnCheckedChangeListener { compoundButton, b ->
+            if (b) {
+                addingTextView.setTypeface(null, Typeface.BOLD)
+            } else {
+                addingTextView.setTypeface(null, Typeface.NORMAL)
+            }
+        }
+        editBind.editFontItalic.setOnCheckedChangeListener { compoundButton, b ->
+            if (b) {
+                addingTextView.setTypeface(null, Typeface.ITALIC)
+            } else {
+                addingTextView.setTypeface(null, Typeface.NORMAL)
+            }
+        }
+
+        editBind.editDoneImg.setOnClickListener {
+
+            val ss = getScreenShotFromView(editBind.editImgLyt)
+
+            if (ss!=null){
+                saveMediaToStorage(ss)
+            }
+
+            val ir = ss?.let { it1 -> getImageUri(this, it1) }
+            Log.e("fffyu", ir.toString())
+            val i = Intent(this@EditorActivity, ResultActivity::class.java)
+            i.putExtra("isFromEdit", true)
+            i.putExtra("FromEditorAct", ir)
+            startActivity(i)
+
+
+        }
+
+    }
+
+    fun showAddNameDialog() {
+        nameDialogBind = GetNameDialogLytBinding.inflate(layoutInflater)
+        val adView = nameDialogBind?.root
+        addNameDialog.setView(adView)
+        val af = addNameDialog.create()
+        addNameDialog.show()
+        nameDialogBind!!.btnOk.setOnClickListener {
+            textToAddImg = nameDialogBind!!.editTxtgetName.text.toString()
+            createTextiew(textToAddImg)
+            editBind.editTxtCusView.visibility = View.VISIBLE
+            af.dismiss()
+
+        }
+        nameDialogBind!!.btnCancle.setOnClickListener {
+            af.dismiss()
+        }
+    }
+
+    fun createTextiew(txt: String) {
+        val txtParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        addingTextView.layoutParams = txtParams
+        addingTextView.text = txt
+        addingTextView.textSize = 20F
+        addingTextView.setTextColor(Color.BLACK)
+        addingTextView.setOnTouchListener(mOnTouchListener)
+        editBind.editImgLyt.addView(addingTextView)
+        val gf = addNameDialog.create()
+        gf.dismiss()
+
+    }
+
+    fun changeTextColor() {
+        ColorPickerPopup.Builder(this)
+            .initialColor(Color.RED) // Set initial color
+            .enableBrightness(true) // Enable brightness slider or not
+            .enableAlpha(true) // Enable alpha slider or not
+            .okTitle("Choose")
+            .cancelTitle("Cancel")
+            .showIndicator(true)
+            .showValue(true)
+            .build()
+            .show(object : ColorPickerObserver() {
+                override fun onColorPicked(color: Int) {
+                    addingTextView.setTextColor(color)
+                }
+
+                fun onColor(color: Int, fromUser: Boolean) {}
+            })
+    }
+
+    private fun getScreenShotFromView(v: View): Bitmap? {
+        // create a bitmap object
+        var screenshot: Bitmap? = null
+        try {
+            // inflate screenshot object
+            // with Bitmap.createBitmap it
+            // requires three parameters
+            // width and height of the view and
+            // the background color
+            screenshot = Bitmap.createBitmap(v.measuredWidth, v.measuredHeight, Bitmap.Config.ARGB_8888)
+            // Now draw this bitmap on a canvas
+            val canvas = Canvas(screenshot)
+            v.draw(canvas)
+        } catch (e: Exception) {
+            Log.e("GFG", "Failed to capture screenshot because:" + e.message)
+        }
+        // return the bitmap
+        return screenshot
+    }
+
+
+    // this method saves the image to gallery
+    private fun saveMediaToStorage(bitmap: Bitmap) {
+        // Generating a file name
+        val filename = "${System.currentTimeMillis()}.jpg"
+
+        // Output stream
+        var fos: OutputStream? = null
+
+        // For devices running android >= Q
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // getting the contentResolver
+            this.contentResolver?.also { resolver ->
+
+                // Content resolver will process the contentvalues
+                val contentValues = ContentValues().apply {
+
+                    // putting file information in content values
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+                }
+
+                // Inserting the contentValues to
+                // contentResolver and getting the Uri
+                val imageUri: Uri? = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                // Opening an outputstream with the Uri that we got
+                fos = imageUri?.let { resolver.openOutputStream(it) }
+            }
+        } else {
+            // These for devices running on android < Q
+            val imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+            val image = File(imagesDir, filename)
+            fos = FileOutputStream(image)
+        }
+
+        fos?.use {
+            // Finally writing the bitmap to the output stream that we opened
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
+            Toast.makeText(this , "Captured View and saved to Gallery" , Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun getImageUri(inContext: Context, inImage: Bitmap): Uri? {
+        val bytes = ByteArrayOutputStream()
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+        val path = MediaStore.Images.Media.insertImage(
+            inContext.getContentResolver(),
+            inImage,
+            "Title",
+            null
+        )
+        return Uri.parse(path)
+    }
 
 
 }
+
+

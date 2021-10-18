@@ -1,5 +1,6 @@
 package com.pebbletechsolutions.memegenrator.ui.main.view
 
+import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
@@ -8,18 +9,36 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
+import android.provider.ContactsContract
 import android.provider.MediaStore
 import android.util.Log
+import android.view.View
+import android.webkit.MimeTypeMap
+import android.widget.Toast
+import androidx.core.graphics.drawable.toBitmap
 import com.bumptech.glide.Glide
+import com.google.android.gms.tasks.OnFailureListener
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.pebbletechsolutions.memegenrator.R
+import com.pebbletechsolutions.memegenrator.data.model.FdbMemeModel
 import com.pebbletechsolutions.memegenrator.databinding.ActivityResultBinding
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
+import java.lang.Exception
 
 class ResultActivity : AppCompatActivity() {
 
     private var resultBind: ActivityResultBinding? =null
+    private var savLName = ""
+    private var curUri = ""
+    private lateinit var savImgRef: DatabaseReference
+    private lateinit var savRealTimeImgRef: StorageReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,14 +47,102 @@ class ResultActivity : AppCompatActivity() {
         setContentView(rView)
 
         val intent: Intent = intent
-        val imgUri = intent.extras?.get("FrmSavImg")
-        Log.e("imguri", imgUri.toString())
-        resultBind!!.croppedImg.setImageURI(imgUri as Uri?)
+        if (intent.extras!!.get("isFromEdit") == true){
+            val bb = intent.extras!!.get("FromEditorAct")
+            curUri = bb.toString()
+            Log.e("fffuri", bb.toString())
+            resultBind!!.cropSavImgBtn.visibility = View.GONE
+            resultBind!!.croppedImg.setImageURI(bb as Uri?)
+        }
+
+        if (intent.extras!!.get("FromCrop") == true){
+            if (intent.extras!!.get("FCC")==true){
+                val fromCCrop = intent.extras!!.get("cropedImg")
+                curUri = fromCCrop.toString()
+                savLName = intent.extras!!.get("savListName").toString()
+                resultBind!!.croppedImg.setImageURI(fromCCrop as Uri?)
+            }else if(intent.extras!!.get("FCC") == false){
+                val takenCC = intent.extras!!.get("takenCrop")
+                curUri = takenCC.toString()
+                savLName = intent.extras!!.get("savListName").toString()
+                resultBind!!.croppedImg.setImageURI(takenCC as Uri?)
+            }
+
+        }
+
+        savImgRef = FirebaseDatabase.getInstance().getReference(savLName)
+        savRealTimeImgRef = FirebaseStorage.getInstance().reference
+
+        resultBind!!.cropSavAndShareImg.setOnClickListener {
+            showShareIntent()
+        }
+
+        resultBind!!.cropSavAndUploadBtn.setOnClickListener {
+            uploadToFirebase(curUri as Uri)
+        }
 
 
 
 
 
+
+
+
+    }
+
+    fun uploadToFirebase(uri: Uri?){
+        val fileRef: StorageReference =
+            savRealTimeImgRef.child(System.currentTimeMillis().toString() + " " + getFileExtension(uri))
+        fileRef.putFile(uri!!).addOnSuccessListener {
+            fileRef.downloadUrl.addOnSuccessListener {
+                var rModel: FdbMemeModel = FdbMemeModel(uri.toString())
+                var rModelId = savImgRef.push().key
+                savImgRef.child(rModelId!!).setValue(rModel)
+                Toast.makeText(this@ResultActivity, "Upload Success", Toast.LENGTH_SHORT).show()
+            }
+
+        }.addOnProgressListener {
+            resultBind!!.rbv.visibility = View.VISIBLE
+            resultBind!!.rsltPB.visibility = View.VISIBLE
+        }.addOnFailureListener(object : OnFailureListener {
+            override fun onFailure(p0: Exception) {
+                resultBind!!.rbv.visibility = View.GONE
+                resultBind!!.rsltPB.visibility = View.GONE
+                Toast.makeText(this@ResultActivity, "Upload Failed", Toast.LENGTH_SHORT).show()
+            }
+
+        })
+    }
+
+
+    fun getFileExtension(uri: Uri?): String? {
+        val cr: ContentResolver  = contentResolver
+        val mime: MimeTypeMap = MimeTypeMap.getSingleton()
+        return mime.getExtensionFromMimeType(cr.getType(uri!!))
+    }
+
+    private fun showShareIntent() {
+        // Step 1: Create Share itent
+        val intent = Intent(Intent.ACTION_SEND).setType("image/*")
+
+        // Step 2: Get Bitmap from your imageView
+        val bitmap = resultBind!!.croppedImg.drawable.toBitmap() // your imageView here.
+
+        // Step 3: Compress image
+        val bytes = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+
+        // Step 4: Save image & get path of it
+        val path = MediaStore.Images.Media.insertImage(this@ResultActivity.contentResolver, bitmap, "tempimage", null)
+
+        // Step 5: Get URI of saved image
+        val uri = Uri.parse(path)
+
+        // Step 6: Put Uri as extra to share intent
+        intent.putExtra(Intent.EXTRA_STREAM, uri)
+
+        // Step 7: Start/Launch Share intent
+        startActivity(intent)
     }
 
 

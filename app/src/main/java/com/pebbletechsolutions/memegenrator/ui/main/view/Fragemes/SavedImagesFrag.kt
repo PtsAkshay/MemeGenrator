@@ -24,6 +24,7 @@ import com.google.firebase.storage.StorageReference
 import com.pebbletechsolutions.memegenrator.data.model.FdbMemeModel
 import com.pebbletechsolutions.memegenrator.databinding.CustomHomeItemDialogBinding
 import com.pebbletechsolutions.memegenrator.databinding.FragmentSavedImagesBinding
+import com.pebbletechsolutions.memegenrator.databinding.GetNameDialogLytBinding
 import com.pebbletechsolutions.memegenrator.databinding.SavedImgPickDialogBinding
 import com.pebbletechsolutions.memegenrator.ui.main.adapter.HomeRecyclerAdapter
 import com.pebbletechsolutions.memegenrator.ui.main.adapter.SavedImageRecyclerAdapter
@@ -46,6 +47,8 @@ class SavedImagesFrag : Fragment(), OnRecyclerItemClickListner {
     private lateinit var savStoreRef: StorageReference
     private lateinit var savedImgList: ArrayList<FdbMemeModel>
     private lateinit var savedImgBottomSheet: ItemViewBottomSheetFrag
+    private lateinit var addNameDialog: MaterialAlertDialogBuilder
+    private var nameDialogBind: GetNameDialogLytBinding? = null
 
 
     private var savFragBind: FragmentSavedImagesBinding? = null
@@ -53,6 +56,7 @@ class SavedImagesFrag : Fragment(), OnRecyclerItemClickListner {
     var isPhototaken = false
     var cropingPhotpPath: String = ""
     var cropImgName: String = "croppedImage"
+    var userSavedImgListName = ""
 
     val cropFragResultContract = object : ActivityResultContract<Any?, Uri?>(){
         override fun createIntent(context: Context, input: Any?): Intent {
@@ -72,8 +76,10 @@ class SavedImagesFrag : Fragment(), OnRecyclerItemClickListner {
 
         savedImgList = arrayListOf<FdbMemeModel>()
 
+        addNameDialog = MaterialAlertDialogBuilder(requireContext())
 
-        savedRef = FirebaseDatabase.getInstance().getReference("savedImgList")
+
+        savedRef = FirebaseDatabase.getInstance().getReference(userSavedImgListName)
         savStoreRef = FirebaseStorage.getInstance().reference
         savedImgBottomSheet = ItemViewBottomSheetFrag()
 
@@ -94,6 +100,8 @@ class SavedImagesFrag : Fragment(), OnRecyclerItemClickListner {
         savFragBind = FragmentSavedImagesBinding.inflate(inflater, container, false)
         val view = SBind?.root
 
+        savFragBind!!.savedFragRV.layoutManager = LinearLayoutManager(requireContext())
+
         if (savedImgList.isEmpty()){
             savFragBind!!.notItemLyt.isVisible = true
             savFragBind!!.saveImgShimmer.visibility = View.GONE
@@ -101,14 +109,19 @@ class SavedImagesFrag : Fragment(), OnRecyclerItemClickListner {
             savFragBind!!.notItemLyt.visibility = View.GONE
             savFragBind!!.saveImgShimmer.isVisible = true
             savFragBind!!.saveImgShimmer.startShimmer()
+            getSavedImgList()
         }
 
         savFragBind!!.btnAddItem.setOnClickListener {
-            cropImgResultLaunch.launch(null)
+            showAddNameDialog()
+            if (userSavedImgListName!= null){
+                cropImgResultLaunch.launch(null)
+            }
+
         }
 
-        savFragBind!!.savedFragRV.layoutManager = LinearLayoutManager(requireContext())
-        getSavedImgList()
+
+
 
 
         return view
@@ -122,9 +135,12 @@ class SavedImagesFrag : Fragment(), OnRecyclerItemClickListner {
         if (resultCode == AppCompatActivity.RESULT_OK){
             if (requestCode == 111){
                 val editBundle: Bundle = Bundle()
-                editBundle.putString("TakenPicutreFromSavedImg", cropingPhotpPath)
-                parentFragmentManager.setFragmentResult("TakenSavedFromImg", editBundle)
-                startActivity(Intent(requireContext(), EditorActivity::class.java))
+                val intent = Intent(requireContext(), ResultActivity::class.java)
+                intent.putExtra("FromCrop", true)
+                intent.putExtra("FCC", true)
+                intent.putExtra("savListName", userSavedImgListName)
+                intent.putExtra("cropedImg", cropingPhotpPath)
+                startActivity(intent)
 //                val u: Intent = Intent(requireContext(), EditorActivity::class.java)
 //                u.putExtra("takenSavedImg", isPhototaken)
 //                u.putExtra("TakenPictureFromSavedImg", cropingPhotpPath)
@@ -133,9 +149,12 @@ class SavedImagesFrag : Fragment(), OnRecyclerItemClickListner {
                 val pickUri: Uri = data?.data!!
                 Log.e("Picked", pickUri.toString())
                 val editBundleSlct: Bundle = Bundle()
-                editBundleSlct.putString("SlctPicSavedImg", pickUri.toString())
-                parentFragmentManager.setFragmentResult("PictureSelectFromSavedImg", editBundleSlct)
-                startActivity(Intent(requireContext(), EditorActivity::class.java))
+                val slct = Intent(requireContext(), ResultActivity::class.java)
+                slct.putExtra("FromCrop", true)
+                slct.putExtra("FCC", false)
+                slct.putExtra("savListName", userSavedImgListName)
+                slct.putExtra("takenCrop", pickUri)
+                startActivity(slct)
 //                val k = Intent(requireContext(), EditorActivity::class.java)
 //                k.putExtra("pickedSavedImg", isPhototaken)
 //                k.putExtra("pickedImageFromSavedImg", pickUri)
@@ -187,6 +206,23 @@ class SavedImagesFrag : Fragment(), OnRecyclerItemClickListner {
     override fun onItemLongClick(position: Int) {
 
     }
+
+    fun showAddNameDialog() {
+        nameDialogBind = GetNameDialogLytBinding.inflate(layoutInflater)
+        val adView = nameDialogBind?.root
+        addNameDialog.setView(adView)
+        val af = addNameDialog.create()
+        addNameDialog.show()
+        nameDialogBind!!.btnOk.setOnClickListener {
+            userSavedImgListName = nameDialogBind!!.editTxtgetName.text.toString()
+
+
+        }
+        nameDialogBind!!.btnCancle.setOnClickListener {
+            af.dismiss()
+        }
+    }
+
 
 }
 

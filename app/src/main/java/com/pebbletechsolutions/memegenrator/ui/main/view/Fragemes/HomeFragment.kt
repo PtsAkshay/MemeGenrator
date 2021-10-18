@@ -123,10 +123,11 @@ class HomeFragment : Fragment(), OnRecyclerItemClickListner {
                         val meme = memeSnapshot.getValue(FdbMemeModel::class.java)
                         FMemeList.add(meme!!)
                     }
-                    _homeFragBind!!.shimmerPlaceHolder.stopShimmer()
+
                     _homeFragBind!!.shimmerPlaceHolder.visibility = View.GONE
                     _homeFragBind!!.homeRV.adapter = HomeRecyclerAdapter(FMemeList, this@HomeFragment)
                 }
+                _homeFragBind!!.shimmerPlaceHolder.stopShimmer()
             }
 
             override fun onCancelled(error: DatabaseError) {

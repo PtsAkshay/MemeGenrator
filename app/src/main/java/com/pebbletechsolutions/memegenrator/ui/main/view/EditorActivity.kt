@@ -26,10 +26,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.text.format.DateFormat
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import com.google.android.material.slider.Slider
 import top.defaults.colorpicker.ColorPickerView
 import top.defaults.colorpicker.ColorPickerPopup
@@ -39,9 +35,18 @@ import android.R
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Canvas
+import android.view.*
 import android.widget.*
 
 import java.io.*
+import android.view.inputmethod.EditorInfo
+
+import android.widget.TextView
+
+import android.widget.TextView.OnEditorActionListener
+
+
+
 
 
 class EditorActivity : AppCompatActivity() {
@@ -165,6 +170,9 @@ class EditorActivity : AppCompatActivity() {
             changeTextColor()
 
         }
+        editBind.editBackImg.setOnClickListener {
+            finish()
+        }
 
         editBind.editFontSizeSlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: Slider) {
@@ -238,6 +246,15 @@ class EditorActivity : AppCompatActivity() {
 
 
         }
+
+
+        editBind.editGetTxt.setOnEditorActionListener(OnEditorActionListener { v, actionId, event ->
+            if (event != null && event.keyCode === KeyEvent.KEYCODE_ENTER || actionId == EditorInfo.IME_ACTION_DONE) {
+                //do what you want on the press of 'done'
+                editBind.editBtnAddTxt.performClick()
+            }
+            false
+        })
 
     }
 

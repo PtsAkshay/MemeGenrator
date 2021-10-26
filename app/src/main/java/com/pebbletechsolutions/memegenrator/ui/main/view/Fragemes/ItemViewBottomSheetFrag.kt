@@ -1,8 +1,10 @@
 package com.pebbletechsolutions.memegenrator.ui.main.view.Fragemes
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -22,8 +24,28 @@ import com.pebbletechsolutions.memegenrator.data.model.FavModel
 import com.pebbletechsolutions.memegenrator.data.model.FavListViewModel
 import com.pebbletechsolutions.memegenrator.ui.main.view.EditorActivity
 import com.pebbletechsolutions.memegenrator.ui.main.view.ResultActivity
+import com.pebbletechsolutions.memegenrator.utils.FavItemClickInterface
 import com.theartofdev.edmodo.cropper.CropImage
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.net.URI
+import android.app.ProgressDialog
+import com.google.android.material.progressindicator.CircularProgressIndicator
+import android.graphics.BitmapFactory
+
+import android.os.AsyncTask
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.net.URL
+import android.app.DownloadManager
+import android.os.Environment
+import androidx.core.content.ContextCompat
+
+import androidx.core.content.ContextCompat.getSystemService
+
+
+
 
 
 class ItemViewBottomSheetFrag : BottomSheetDialogFragment() {
@@ -36,6 +58,8 @@ class ItemViewBottomSheetFrag : BottomSheetDialogFragment() {
     private val bsBind get() = bottomSheetBind
     private lateinit var passMore: Bundle
     val fragFav = FavouriteFrag()
+    private lateinit var myUri: Uri
+    var mProgressDialog: CircularProgressIndicator? = null
     var favList: ArrayList<FavModel> = arrayListOf<FavModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,19 +74,24 @@ class ItemViewBottomSheetFrag : BottomSheetDialogFragment() {
         passMore = Bundle()
 
 
-
         parentFragmentManager.setFragmentResultListener("fromHomeFrag", this, FragmentResultListener { requestKey, result ->
 
             ImgRs = result.get("HomeFragList").toString()
             Log.e("immm", ImgRs.toString())
+            myUri = Uri.parse(ImgRs)
+            Log.e("immmm", myUri.toString())
 //            bottomSheetBind!!.bsMemeImg.setImageResource(ImgRs)
-            bottomSheetBind!!.bsBtnDelete.visibility = View.GONE
             Glide.with(requireContext()).load(ImgRs).into(bottomSheetBind!!.bsMemeImg)
 
         })
 
         parentFragmentManager.setFragmentResultListener("FromFavFrag", this, FragmentResultListener { requestKey, result ->
-            ImgRs = result.get("FromFavFrag").toString()
+            ImgRs = result.get("FavFragUri").toString()
+            Glide.with(requireContext()).load(ImgRs).into(bottomSheetBind!!.bsMemeImg)
+        })
+
+        parentFragmentManager.setFragmentResultListener("SavedFragImg", this, FragmentResultListener { requestKey, result ->
+            ImgRs = result.get("FromSaveFrag").toString()
             Glide.with(requireContext()).load(ImgRs).into(bottomSheetBind!!.bsMemeImg)
         })
 
@@ -89,11 +118,9 @@ class ItemViewBottomSheetFrag : BottomSheetDialogFragment() {
             startActivity(inte)
 
 
+
         }
 
-        bottomSheetBind!!.bsBtnCrop.setOnClickListener {
-            CropImage.activity(ImgRs.toUri()).start(requireContext(), this)
-        }
 
         bottomSheetBind!!.bsBtnShare.setOnClickListener {
             showShareIntent()
@@ -104,12 +131,6 @@ class ItemViewBottomSheetFrag : BottomSheetDialogFragment() {
             favVM.insertFavrtImg(FavModel(ImgRs))
             Toast.makeText(requireContext(), "Added To Favourite", Toast.LENGTH_SHORT).show()
         }
-
-        bottomSheetBind!!.bsBtnDelete.setOnClickListener {
-            favVM.deleteFavrtImg(FavModel(ImgRs))
-            Toast.makeText(requireContext(), "Deleted", Toast.LENGTH_SHORT).show()
-        }
-
 
 
 
@@ -123,28 +144,7 @@ class ItemViewBottomSheetFrag : BottomSheetDialogFragment() {
     }
 
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE){
-            val cropResult: CropImage.ActivityResult = CropImage.getActivityResult(data)
-            if (resultCode == Activity.RESULT_OK){
-                val cropUri = cropResult.uri
-                Log.e("crop", cropUri.toString())
-                val ri: Intent = Intent(requireContext(), ResultActivity::class.java)
-                ri.putExtra("FromCrop", true)
-                ri.putExtra("croppedOk", true)
-                ri.putExtra("croppedUri", cropUri)
-                startActivity(ri)
-            }else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE){
-                val error: Exception = cropResult.error
-                val cr: Intent = Intent(requireContext(), ResultActivity::class.java)
-                cr.putExtra("FromCrop", true)
-                cr.putExtra("croppedOk", false)
-                cr.putExtra("croppedUriError", error)
-                startActivity(cr)
-            }
-        }
-    }
+
 
     private fun showShareIntent() {
         // Step 1: Create Share itent
@@ -170,6 +170,30 @@ class ItemViewBottomSheetFrag : BottomSheetDialogFragment() {
         // Step 7: Start/Launch Share intent
         startActivity(intent)
     }
+
+    fun getImageUri(inContext: Context, inImage: Bitmap): Uri? {
+        val bytes = ByteArrayOutputStream()
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+        val path = MediaStore.Images.Media.insertImage(
+            inContext.getContentResolver(),
+            inImage,
+            "Title",
+            null
+        )
+        return Uri.parse(path)
+    }
+
+    private fun CreateTempFile(url: String){
+
+        val localFile = File.createTempFile("Firebase", "jpg")
+
+
+    }
+
+
+
+
+
 
 
 

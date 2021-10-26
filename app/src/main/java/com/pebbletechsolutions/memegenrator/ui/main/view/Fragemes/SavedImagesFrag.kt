@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.pebbletechsolutions.memegenrator.R
 import com.pebbletechsolutions.memegenrator.data.model.FavListViewModel
+import com.pebbletechsolutions.memegenrator.data.model.SavedModel
 import com.pebbletechsolutions.memegenrator.databinding.FragmentSavedImagesBinding
 import com.pebbletechsolutions.memegenrator.ui.main.adapter.SavedImageRecyclerAdapter
 import com.pebbletechsolutions.memegenrator.ui.main.view.ResultActivity
@@ -25,6 +26,9 @@ class SavedImagesFrag : Fragment(), OnRecyclerItemClickListner {
     private val SBind get() = savedBind
     private lateinit var favAndSavViewModel: FavListViewModel
     private lateinit var bottmSheet: ItemViewBottomSheetFrag
+    val savBundle = Bundle()
+    var savedImgUri = ""
+    var savedList: ArrayList<SavedModel> = arrayListOf<SavedModel>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,6 +56,7 @@ class SavedImagesFrag : Fragment(), OnRecyclerItemClickListner {
                 if (it.isEmpty()){
                     savedBind!!.notItemLyt.visibility = View.VISIBLE
                 }else{
+                    savedList.addAll(SavList)
                     savedBind!!.notItemLyt.visibility = View.GONE
                     savedAdapter.updateSavedImgList(it)
                 }
@@ -71,11 +76,19 @@ class SavedImagesFrag : Fragment(), OnRecyclerItemClickListner {
     }
 
     override fun onItemClick(position: Int) {
-
+        ShowSavedBs(position)
     }
 
     override fun onItemLongClick(position: Int) {
         TODO("Not yet implemented")
+    }
+
+    fun ShowSavedBs(position: Int){
+        savBundle.putString("FromSaveFrag", savedList[position].SavImgUri)
+        Log.e("favImgUri", savedList[position].SavImgUri)
+        savedImgUri = savedList[position].SavImgUri
+        parentFragmentManager.setFragmentResult("SavedFragImg", savBundle)
+        bottmSheet.show(requireActivity().supportFragmentManager, ItemViewBottomSheetFrag.TAG)
     }
 
 

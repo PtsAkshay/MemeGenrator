@@ -33,7 +33,7 @@
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:adjustViewBounds="true"
-                android:src="@drawable/blue_beauty_logo"
+                android:src="@drawable/blue_barry_two"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintRight_toRightOf="parent"

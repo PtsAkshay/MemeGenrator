@@ -74,6 +74,10 @@ class HomeActivity : AppCompatActivity() {
             Manifest.permission.CAMERA,
         )
 
+        if (!permissionUtils.hasPermissions(this, PERMISSIONS)){
+            ActivityCompat.requestPermissions(this, PERMISSIONS, 1)
+        }
+
 //        takePhoto = registerForActivityResult(ActivityResultContracts.StartActivityForResult(), ActivityResultCallback {
 //            if (it.resultCode == RESULT_OK && it.data != null){
 ////               val bitmap: Bitmap = BitmapFactory.decodeFile(currentPhotoPath)
@@ -142,24 +146,36 @@ class HomeActivity : AppCompatActivity() {
             }
         })
 
-
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        return super.onCreateOptionsMenu(menu)
-        menuInflater.inflate(R.menu.top_app_bar_menu, menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return super.onOptionsItemSelected(item)
-        return when (item.itemId) {
-            R.id.cropImgOption -> {
-                CropImage.activity().start(this)
-                true
+        HABind.homeAppBar.setOnMenuItemClickListener {
+            when(it.itemId){
+                R.id.cropImgOption -> {
+                    CropImage.activity().start(this)
+                    true
+                }
+                else -> false
             }
-            else -> super.onOptionsItemSelected(item)
         }
+
+
     }
+
+
+
+//    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+//        return super.onCreateOptionsMenu(menu)
+//        menuInflater.inflate(R.menu.top_app_bar_menu, menu)
+//    }
+//
+//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+//        return super.onOptionsItemSelected(item)
+//        return when (item.itemId) {
+//            R.id.cropImgOption -> {
+//                CropImage.activity().start(this)
+//                true
+//            }
+//            else -> super.onOptionsItemSelected(item)
+//        }
+//    }
 
     private fun animateFab()
     {
@@ -232,14 +248,17 @@ class HomeActivity : AppCompatActivity() {
         if (resultCode == RESULT_OK){
             if (requestCode == TAKE_PICTURE_CODE){
                 val u: Intent = Intent(this, EditorActivity::class.java)
-                u.putExtra("taken", isPhototaken)
+                u.putExtra("FromHomeFabBtn", true)
+                u.putExtra("takenFromHome", isPhototaken)
+                Log.e("taken", currentPhotoPath)
                 u.putExtra("TakenPicture", currentPhotoPath)
                 startActivity(u)
             }else if(requestCode == PICK_IMAGE_CODE){
                 val pickUri: Uri = data?.data!!
                 Log.e("Picked", pickUri.toString())
                 val k = Intent(this@HomeActivity, EditorActivity::class.java)
-                k.putExtra("picked", isPhototaken)
+                k.putExtra("FromHomeFabBtn", true)
+                k.putExtra("takenFromHome", isPhototaken)
                 k.putExtra("pickedImage", pickUri)
                 startActivity(k)
             }

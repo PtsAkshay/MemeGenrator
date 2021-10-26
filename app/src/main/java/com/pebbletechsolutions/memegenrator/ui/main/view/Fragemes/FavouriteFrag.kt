@@ -22,6 +22,9 @@ class FavouriteFrag : Fragment(), OnRecyclerItemClickListner {
     private lateinit var itemBs: ItemViewBottomSheetFrag
     var favFragBind: FragmentFavouriteBinding? = null
     val favFB get() = favFragBind
+    val favBundle = Bundle()
+    var FavImg: String = ""
+
 
     var favListData: ArrayList<FavModel> = arrayListOf<FavModel>()
 
@@ -29,8 +32,6 @@ class FavouriteFrag : Fragment(), OnRecyclerItemClickListner {
         super.onCreate(savedInstanceState)
 
         itemBs = ItemViewBottomSheetFrag()
-
-
 
     }
 
@@ -49,6 +50,7 @@ class FavouriteFrag : Fragment(), OnRecyclerItemClickListner {
 
         favVieModel.allImgs.observe(viewLifecycleOwner, Observer {list ->
             list?.let {
+                favListData.addAll(list)
                 adapter.updateList(it)
             }
         })
@@ -61,7 +63,7 @@ class FavouriteFrag : Fragment(), OnRecyclerItemClickListner {
     }
 
     override fun onItemClick(position: Int) {
-
+        showFavBS(position)
     }
 
     override fun onItemLongClick(position: Int) {
@@ -69,6 +71,13 @@ class FavouriteFrag : Fragment(), OnRecyclerItemClickListner {
     }
 
 
+    fun showFavBS(position: Int){
+        favBundle.putString("FromFavFrag", favListData[position].FavImgUri)
+        Log.e("favImgUri", favListData[position].FavImgUri)
+        FavImg = favListData[position].FavImgUri
+        parentFragmentManager.setFragmentResult("FromFavFrag", favBundle)
+        itemBs.show(requireActivity().supportFragmentManager, ItemViewBottomSheetFrag.TAG)
+    }
 
 
 }

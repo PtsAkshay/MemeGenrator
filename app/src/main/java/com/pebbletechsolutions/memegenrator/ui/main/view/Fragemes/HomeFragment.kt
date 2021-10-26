@@ -112,6 +112,8 @@ class HomeFragment : Fragment(), OnRecyclerItemClickListner{
 
         _homeFragBind!!.homeRV.layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
 //        _homeFragBind!!.homeRV.adapter = HomeRecyclerAdapter(MemeListData as ArrayList<MemeModel>, this)
+        _homeFragBind!!.shimmerPlaceHolder.visibility = View.VISIBLE
+        _homeFragBind!!.shimmerPlaceHolder.startShimmer()
         getMemeImageFromFirebase()
         return view
     }
@@ -150,7 +152,7 @@ class HomeFragment : Fragment(), OnRecyclerItemClickListner{
     }
 
     override fun onItemClick(position: Int) {
-        Toast.makeText(context, position.toString(), Toast.LENGTH_SHORT).show()
+//        Toast.makeText(context, position.toString(), Toast.LENGTH_SHORT).show()
 //        ShowCustomDialog(position)
         showBottomSheet(position)
     }

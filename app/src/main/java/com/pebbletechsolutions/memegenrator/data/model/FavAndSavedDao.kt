@@ -12,6 +12,7 @@ interface FavAndSavedDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertSavedImg(savImgUri: SavedModel)
 
+//    @Query("DELETE FROM favourite where ImgUri is :imgUrl")
     @Delete
     suspend fun deleteFavImg(imgUrl: FavModel)
 

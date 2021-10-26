@@ -63,7 +63,9 @@ class EditorActivity : AppCompatActivity() {
     private val IMAGE_REQ = 44
     var textToAddImg = ""
     var fontSize: Float = 0f
+    var addedTxt = 0
     private lateinit var addingTextView: TextView
+    private lateinit var addingTextViewTwo: TextView
     private lateinit var addNameDialog: MaterialAlertDialogBuilder
     private var nameDialogBind: GetNameDialogLytBinding? = null
     private lateinit var colorPickerView: ColorPickerView
@@ -75,14 +77,32 @@ class EditorActivity : AppCompatActivity() {
         val view = editBind.root
         setContentView(view)
         addingTextView = TextView(this)
+        addingTextViewTwo = TextView(this)
         colorPickerView = ColorPickerView(this)
 
         var intent = intent
-        bsImgUri = intent.extras?.get("fromHomeBs") as String
-        Log.e("im", bsImgUri)
+        val HomeBS = intent.extras?.get("homeBS")
+        val TakenFromHome = intent.extras?.get("takenFromHome")
+        if (HomeBS == true){
+            bsImgUri = intent.extras?.get("fromHomeBs") as String
+            Log.e("im", bsImgUri)
 //        passMoreBundle.putString("SlctImgUri", bsImgUri)
 
-        Glide.with(this).load(bsImgUri).into(editBind.editImg)
+            Glide.with(this).load(bsImgUri).into(editBind.editImg)
+        }else
+            if (intent.extras?.get("FromHomeFabBtn") == true){
+                if (TakenFromHome == true){
+                    val takenUri = intent.extras?.get("TakenPicture")
+                    Log.e("takenUri", takenUri.toString())
+                    Glide.with(this).load(takenUri).into(editBind.editImg)
+//                    editBind.editImg.setImageURI(takenUri as Uri)
+                }else {
+                    val pickedUri = intent.extras?.get("pickedImage")
+                    editBind.editImg.setImageURI(pickedUri as Uri)
+
+                }
+            }
+
 
 //        replaceFragment(EditImageFrag())
 
@@ -130,16 +150,20 @@ class EditorActivity : AppCompatActivity() {
 //            showAddNameDialog()
             var txt = editBind.editGetTxt.text.toString()
             editBind.editGetTxt.setText("")
-            createTextiew(txt)
+            when(addedTxt){
+                0 ->{
+                    createTextiew(txt)
+                    addedTxt = 1
+                }else -> Toast.makeText(this, "Please Set the text first in order to add another", Toast.LENGTH_SHORT).show()
+            }
+
             editBind.editTxtCusView.visibility = View.VISIBLE
         }
 
-        editBind.editDoneImg.setOnClickListener {
-
-        }
 
         editBind.editChangeColor.setOnClickListener {
             changeTextColor()
+
         }
 
         editBind.editFontSizeSlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
@@ -148,14 +172,17 @@ class EditorActivity : AppCompatActivity() {
             }
 
             override fun onStopTrackingTouch(slider: Slider) {
-                addingTextView.setTextSize(fontSize)
+
+                        addingTextView.setTextSize(fontSize)
+
             }
 
         })
 
         editBind.editFontSizeSlider.addOnChangeListener { slider, value, fromUser ->
-            addingTextView.setTextSize(value)
-            fontSize = value
+
+                    addingTextView.setTextSize(value)
+                    fontSize = value
         }
 
         editBind.editChangeFontSize.setOnCheckedChangeListener { compoundButton, b ->
@@ -168,33 +195,46 @@ class EditorActivity : AppCompatActivity() {
 
         editBind.editFontBold.setOnCheckedChangeListener { compoundButton, b ->
             if (b) {
-                addingTextView.setTypeface(null, Typeface.BOLD)
+                        addingTextView.setTypeface(null, Typeface.BOLD)
+
             } else {
-                addingTextView.setTypeface(null, Typeface.NORMAL)
+                        addingTextView.setTypeface(null, Typeface.NORMAL)
             }
         }
         editBind.editFontItalic.setOnCheckedChangeListener { compoundButton, b ->
             if (b) {
-                addingTextView.setTypeface(null, Typeface.ITALIC)
+                        addingTextView.setTypeface(null, Typeface.ITALIC)
+
             } else {
-                addingTextView.setTypeface(null, Typeface.NORMAL)
+
+                        addingTextView.setTypeface(null, Typeface.NORMAL)
+
+            }
+        }
+
+
+        editBind.editBtnSet.setOnClickListener {
+            val curSs = getScreenShotFromView(editBind.editImgLyt)
+            if (curSs!=null){
+                addedTxt = 0
+                removeTextView()
+                editBind.editImg.setImageBitmap(curSs)
             }
         }
 
         editBind.editDoneImg.setOnClickListener {
-
             val ss = getScreenShotFromView(editBind.editImgLyt)
 
             if (ss!=null){
                 saveMediaToStorage(ss)
             }
-
             val ir = ss?.let { it1 -> getImageUri(this, it1) }
             Log.e("fffyu", ir.toString())
             val i = Intent(this@EditorActivity, ResultActivity::class.java)
             i.putExtra("isFromEdit", true)
             i.putExtra("FromEditorAct", ir)
             startActivity(i)
+            addedTxt = 0
 
 
         }
@@ -218,6 +258,11 @@ class EditorActivity : AppCompatActivity() {
         gf.dismiss()
 
     }
+
+    fun removeTextView(){
+        editBind.editImgLyt.removeView(addingTextView)
+    }
+
 
     fun changeTextColor() {
         ColorPickerPopup.Builder(this)

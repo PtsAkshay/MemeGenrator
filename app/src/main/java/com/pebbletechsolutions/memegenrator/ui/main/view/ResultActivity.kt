@@ -2,30 +2,27 @@ package com.pebbletechsolutions.memegenrator.ui.main.view
 
 import android.content.ContentResolver
 import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
-import android.provider.ContactsContract
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.core.graphics.drawable.toBitmap
-import com.bumptech.glide.Glide
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
-import com.pebbletechsolutions.memegenrator.R
-import com.pebbletechsolutions.memegenrator.data.model.FdbMemeModel
+import androidx.lifecycle.ViewModelProvider
+import com.pebbletechsolutions.memegenrator.data.model.FavListViewModel
+import com.pebbletechsolutions.memegenrator.data.model.FavModel
+import com.pebbletechsolutions.memegenrator.data.model.SavedModel
 import com.pebbletechsolutions.memegenrator.databinding.ActivityResultBinding
+
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -35,10 +32,10 @@ import java.lang.Exception
 class ResultActivity : AppCompatActivity() {
 
     private var resultBind: ActivityResultBinding? =null
-    private var savLName = ""
+    private var rImgUri: Uri? = null
     private var curUri = ""
-    private lateinit var savImgRef: DatabaseReference
-    private lateinit var savRealTimeImgRef: StorageReference
+    var savedImgList: ArrayList<FavModel> = arrayListOf<FavModel>()
+    private lateinit var favSavVM: FavListViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,72 +43,47 @@ class ResultActivity : AppCompatActivity() {
         val rView = resultBind?.root
         setContentView(rView)
 
+        favSavVM = ViewModelProvider(this).get(FavListViewModel::class.java)
+
         val intent: Intent = intent
         if (intent.extras!!.get("isFromEdit") == true){
             val bb = intent.extras!!.get("FromEditorAct")
             curUri = bb.toString()
             Log.e("fffuri", bb.toString())
-            resultBind!!.cropSavImgBtn.visibility = View.GONE
             resultBind!!.croppedImg.setImageURI(bb as Uri?)
         }
 
         if (intent.extras!!.get("FromCrop") == true){
-            if (intent.extras!!.get("FCC")==true){
-                val fromCCrop = intent.extras!!.get("cropedImg")
+            if (intent.extras!!.get("croppedOk")==true){
+                val fromCCrop = intent.extras!!.get("croppedUri")
+                Log.e("cropUri", fromCCrop.toString())
                 curUri = fromCCrop.toString()
-                savLName = intent.extras!!.get("savListName").toString()
                 resultBind!!.croppedImg.setImageURI(fromCCrop as Uri?)
-            }else if(intent.extras!!.get("FCC") == false){
-                val takenCC = intent.extras!!.get("takenCrop")
-                curUri = takenCC.toString()
-                savLName = intent.extras!!.get("savListName").toString()
-                resultBind!!.croppedImg.setImageURI(takenCC as Uri?)
+            }else{
+                var error = intent.extras!!.get("croppedUriError")
+                Toast.makeText(this, error.toString(), Toast.LENGTH_SHORT).show()
             }
 
         }
 
-        savImgRef = FirebaseDatabase.getInstance().getReference(savLName)
-        savRealTimeImgRef = FirebaseStorage.getInstance().reference
 
-        resultBind!!.cropSavAndShareImg.setOnClickListener {
+        resultBind!!.resultSaveImg.setOnClickListener {
+            val rs = getScreenShotFromView(resultBind!!.croppedImg)
+            if (rs != null){
+                saveMediaToStorage(rs)
+                rImgUri = getImageUri(this, rs)
+                favSavVM.insertSVImg(SavedModel(rImgUri.toString()))
+                Log.e("rUri", rImgUri.toString())
+            }
+
+        }
+
+
+
+        resultBind!!.resultShareImg.setOnClickListener {
             showShareIntent()
         }
 
-        resultBind!!.cropSavAndUploadBtn.setOnClickListener {
-            uploadToFirebase(curUri as Uri)
-        }
-
-
-
-
-
-
-
-
-    }
-
-    fun uploadToFirebase(uri: Uri?){
-        val fileRef: StorageReference =
-            savRealTimeImgRef.child(System.currentTimeMillis().toString() + " " + getFileExtension(uri))
-        fileRef.putFile(uri!!).addOnSuccessListener {
-            fileRef.downloadUrl.addOnSuccessListener {
-                var rModel: FdbMemeModel = FdbMemeModel(uri.toString())
-                var rModelId = savImgRef.push().key
-                savImgRef.child(rModelId!!).setValue(rModel)
-                Toast.makeText(this@ResultActivity, "Upload Success", Toast.LENGTH_SHORT).show()
-            }
-
-        }.addOnProgressListener {
-            resultBind!!.rbv.visibility = View.VISIBLE
-            resultBind!!.rsltPB.visibility = View.VISIBLE
-        }.addOnFailureListener(object : OnFailureListener {
-            override fun onFailure(p0: Exception) {
-                resultBind!!.rbv.visibility = View.GONE
-                resultBind!!.rsltPB.visibility = View.GONE
-                Toast.makeText(this@ResultActivity, "Upload Failed", Toast.LENGTH_SHORT).show()
-            }
-
-        })
     }
 
 
@@ -121,12 +93,25 @@ class ResultActivity : AppCompatActivity() {
         return mime.getExtensionFromMimeType(cr.getType(uri!!))
     }
 
+    fun getImageUri(inContext: Context, inImage: Bitmap): Uri? {
+        val bytes = ByteArrayOutputStream()
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+        val path = MediaStore.Images.Media.insertImage(
+            inContext.getContentResolver(),
+            inImage,
+            "Title",
+            null
+        )
+        return Uri.parse(path)
+    }
+
     private fun showShareIntent() {
         // Step 1: Create Share itent
         val intent = Intent(Intent.ACTION_SEND).setType("image/*")
 
         // Step 2: Get Bitmap from your imageView
-        val bitmap = resultBind!!.croppedImg.drawable.toBitmap() // your imageView here.
+
+        val bitmap = resultBind!!.croppedImg.drawable.toBitmap()// your imageView here.
 
         // Step 3: Compress image
         val bytes = ByteArrayOutputStream()
@@ -145,6 +130,26 @@ class ResultActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+
+    private fun getScreenShotFromView(v: View): Bitmap? {
+        // create a bitmap object
+        var screenshot: Bitmap? = null
+        try {
+            // inflate screenshot object
+            // with Bitmap.createBitmap it
+            // requires three parameters
+            // width and height of the view and
+            // the background color
+            screenshot = Bitmap.createBitmap(v.measuredWidth, v.measuredHeight, Bitmap.Config.ARGB_8888)
+            // Now draw this bitmap on a canvas
+            val canvas = Canvas(screenshot)
+            v.draw(canvas)
+        } catch (e: Exception) {
+            Log.e("GFG", "Failed to capture screenshot because:" + e.message)
+        }
+        // return the bitmap
+        return screenshot
+    }
 
     fun saveMediaToStorage(bitmap: Bitmap) {
         //Generating a file name
@@ -186,6 +191,7 @@ class ResultActivity : AppCompatActivity() {
         fos?.use {
             //Finally writing the bitmap to the output stream that we opened
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
+            Toast.makeText(this, "Image Saved In Pictures", Toast.LENGTH_SHORT).show()
 
         }
     }

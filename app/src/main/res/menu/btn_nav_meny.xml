@@ -9,9 +9,9 @@
 
 
     <item
-        android:id="@+id/btnNavSI"
-        android:title="@string/btn_nav_menu_two"
-        android:icon="@drawable/saved_image_icon"/>
+        android:id="@+id/btmNavSavedImg"
+        android:title="Images"
+        android:icon="@drawable/saved_img_icon"/>
 
 
     <item

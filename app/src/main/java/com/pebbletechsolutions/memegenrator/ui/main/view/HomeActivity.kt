@@ -1,7 +1,6 @@
 package com.pebbletechsolutions.memegenrator.ui.main.view
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
@@ -9,13 +8,13 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.Animation
 import android.widget.Toast
-import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
@@ -23,13 +22,14 @@ import com.pebbletechsolutions.memegenrator.R
 import com.pebbletechsolutions.memegenrator.databinding.ActivityMainBinding
 import com.pebbletechsolutions.memegenrator.ui.main.view.Fragemes.FavouriteFrag
 import com.pebbletechsolutions.memegenrator.ui.main.view.Fragemes.HomeFragment
-import com.pebbletechsolutions.memegenrator.ui.main.view.Fragemes.SavedImagesFrag
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.home_recycler_item.*
 import androidx.core.widget.NestedScrollView
+import com.pebbletechsolutions.memegenrator.ui.main.view.Fragemes.SavedImagesFrag
 import com.pebbletechsolutions.memegenrator.utils.Permissions
 import com.pebbletechsolutions.memegenrator.utils.PickOrCaptureFile
 import com.pebbletechsolutions.memegenrator.utils.startAnimation
+import com.theartofdev.edmodo.cropper.CropImage
 import java.io.File
 import java.io.IOException
 
@@ -67,6 +67,7 @@ class HomeActivity : AppCompatActivity() {
         permissionUtils = Permissions()
         takeOrCapture = PickOrCaptureFile()
 
+
         PERMISSIONS = arrayOf(
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -90,10 +91,10 @@ class HomeActivity : AppCompatActivity() {
                     replaceFragment(HomeFragment())
                     HABind.homeCreateFab.visibility = View.VISIBLE
                 }
-                R.id.btnNavSI -> {
+                R.id.btmNavSavedImg -> {
                     replaceFragment(SavedImagesFrag())
-                    HABind.homeCreateFab.visibility = View.GONE
                 }
+
                 R.id.btnNavFav -> {
                     replaceFragment(FavouriteFrag())
                 }
@@ -144,6 +145,22 @@ class HomeActivity : AppCompatActivity() {
 
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        return super.onCreateOptionsMenu(menu)
+        menuInflater.inflate(R.menu.top_app_bar_menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return super.onOptionsItemSelected(item)
+        return when (item.itemId) {
+            R.id.cropImgOption -> {
+                CropImage.activity().start(this)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
     private fun animateFab()
     {
         if (isFabOpen){
@@ -176,6 +193,7 @@ class HomeActivity : AppCompatActivity() {
     private fun replaceFragment(frag: Fragment) {
         val fragTransaction = supportFragmentManager.beginTransaction()
         fragTransaction.replace(R.id.FragContainer, frag)
+        fragTransaction.isAddToBackStackAllowed
         fragTransaction.commit()
 
     }
@@ -227,8 +245,25 @@ class HomeActivity : AppCompatActivity() {
             }
 
         }
+        if(requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE){
+            val cropR: CropImage.ActivityResult = CropImage.getActivityResult(data)
+            if (resultCode == RESULT_OK){
+                val cropImgUri = cropR.uri
+                val intent = Intent(this, ResultActivity::class.java)
+                intent.putExtra("FromCrop", true)
+                intent.putExtra("croppedOk", true)
+                intent.putExtra("croppedUri", cropImgUri)
+                startActivity(intent)
+            }else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE){
+                val erro = cropR.error
+                val j = Intent(this, ResultActivity::class.java)
+                j.putExtra("FromCrop", true)
+                j.putExtra("croppedOk", false)
+                j.putExtra("croppedUriError", erro)
+                startActivity(j)
+            }
+        }
     }
-
 
 
 

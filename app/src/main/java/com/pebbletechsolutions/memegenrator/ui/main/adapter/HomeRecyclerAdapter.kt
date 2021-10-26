@@ -29,8 +29,9 @@ class HomeRecyclerAdapter(val urls: ArrayList<FdbMemeModel>, val OnItemClick: On
 
     override fun onBindViewHolder(holder: HomeRVViewHolder, position: Int) {
         val url = urls[position]
-        Log.e("imgUri", url.image.toString())
-        Glide.with(holder.itemView.context).load(url.image).into(holder.itemView.memeImg)
+//        holder.MemeImg.setImageResource(url.memeImg)
+        Glide.with(holder.itemView).load(url.image).into(holder.MemeImg)
+
     }
 
     override fun getItemCount(): Int {

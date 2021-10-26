@@ -201,23 +201,7 @@ class EditorActivity : AppCompatActivity() {
 
     }
 
-    fun showAddNameDialog() {
-        nameDialogBind = GetNameDialogLytBinding.inflate(layoutInflater)
-        val adView = nameDialogBind?.root
-        addNameDialog.setView(adView)
-        val af = addNameDialog.create()
-        addNameDialog.show()
-        nameDialogBind!!.btnOk.setOnClickListener {
-            textToAddImg = nameDialogBind!!.editTxtgetName.text.toString()
-            createTextiew(textToAddImg)
-            editBind.editTxtCusView.visibility = View.VISIBLE
-            af.dismiss()
 
-        }
-        nameDialogBind!!.btnCancle.setOnClickListener {
-            af.dismiss()
-        }
-    }
 
     fun createTextiew(txt: String) {
         val txtParams = FrameLayout.LayoutParams(

@@ -47,6 +47,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Edit"
+            app:strokeWidth="0dp"
             android:textAllCaps="false"
             android:fontFamily="@font/roboto_medium"
             android:textSize="16sp"
@@ -57,26 +58,12 @@
             app:iconTint="#3F51B5"/>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/bsBtnCrop"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Crop"
-            android:textAllCaps="false"
-            android:fontFamily="@font/roboto_medium"
-            android:textSize="16sp"
-            android:textColor="#3F51B5"
-            app:icon="@drawable/crop_icon"
-            app:iconGravity="textStart"
-            app:iconPadding="20dp"
-            app:iconTint="#3F51B5"/>
-
-        <com.google.android.material.button.MaterialButton
             android:id="@+id/bsBtnShare"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Share"
+            app:strokeWidth="0dp"
             android:textAllCaps="false"
             android:fontFamily="@font/roboto_medium"
             android:textSize="16sp"
@@ -96,6 +83,7 @@
             android:textAllCaps="false"
             android:fontFamily="@font/roboto_medium"
             android:textSize="16sp"
+            app:strokeWidth="0dp"
             android:textColor="#3F51B5"
             app:icon="@drawable/heart_svgrepo_com"
             app:iconSize="24dp"

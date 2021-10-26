@@ -24,12 +24,13 @@ import com.pebbletechsolutions.memegenrator.databinding.CustomHomeItemDialogBind
 import com.pebbletechsolutions.memegenrator.databinding.FragmentHomeBinding
 import com.pebbletechsolutions.memegenrator.ui.main.adapter.HomeRecyclerAdapter
 import com.pebbletechsolutions.memegenrator.ui.main.view.EditorActivity
+import com.pebbletechsolutions.memegenrator.utils.OnBSBtnClick
 import com.pebbletechsolutions.memegenrator.utils.OnRecyclerItemClickListner
 import com.pebbletechsolutions.memegenrator.utils.startAnimation
 import kotlinx.coroutines.GlobalScope
 
 
-class HomeFragment : Fragment(), OnRecyclerItemClickListner {
+class HomeFragment : Fragment(), OnRecyclerItemClickListner{
 
     private lateinit var dRef: DatabaseReference
     private lateinit var FMemeList: ArrayList<FdbMemeModel>
@@ -40,6 +41,8 @@ class HomeFragment : Fragment(), OnRecyclerItemClickListner {
     var customDialog: MaterialAlertDialogBuilder? = null
     private lateinit var itemBottomSheet: ItemViewBottomSheetFrag
     val pass: Bundle = Bundle()
+
+    var ImgUrl: String = ""
 
 
     private lateinit var ImgRef: DatabaseReference
@@ -123,11 +126,10 @@ class HomeFragment : Fragment(), OnRecyclerItemClickListner {
                         val meme = memeSnapshot.getValue(FdbMemeModel::class.java)
                         FMemeList.add(meme!!)
                     }
-
+                    _homeFragBind!!.shimmerPlaceHolder.stopShimmer()
                     _homeFragBind!!.shimmerPlaceHolder.visibility = View.GONE
                     _homeFragBind!!.homeRV.adapter = HomeRecyclerAdapter(FMemeList, this@HomeFragment)
                 }
-                _homeFragBind!!.shimmerPlaceHolder.stopShimmer()
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -160,27 +162,13 @@ class HomeFragment : Fragment(), OnRecyclerItemClickListner {
     }
 
 
-    private fun ShowCustomDialog(position: Int) {
-        DialogBind = CustomHomeItemDialogBinding.inflate(layoutInflater)
-        val DialogView = DialogBind!!.root
-       customDialog!!.setView(DialogView)
-        Glide.with(this).load(FMemeList[position].image).into(DialogBind!!.dialogMemeImg)
-        _homeFragBind!!.homeFragBlur.visibility = View.VISIBLE
-        customDialog!!.show()
-        val df = customDialog!!.create()
-        DialogBind!!.dialogBtnEdit.setOnClickListener {
-            Toast.makeText(context, "Edit Button Clicked", Toast.LENGTH_SHORT).show()
-            val i: Intent = Intent(context, EditorActivity::class.java)
-            i.putExtra("ClickedImg", MemeListData[position].memeImg)
-            startActivity(i)
-            df.dismiss()
-        }
 
-    }
 
     fun showBottomSheet(position: Int){
         pass.putString("HomeFragList", FMemeList[position].image)
+        ImgUrl = FMemeList[position].image.toString()
         parentFragmentManager.setFragmentResult("fromHomeFrag", pass)
         itemBottomSheet.show(requireActivity().supportFragmentManager, ItemViewBottomSheetFrag.TAG)
     }
+
 }

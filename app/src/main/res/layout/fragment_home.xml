@@ -14,7 +14,7 @@
         android:layout_height="match_parent"
         android:foregroundGravity="center"
         android:orientation="vertical"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -186,7 +186,6 @@
         android:layout_marginBottom="50dp"/>
 
     <View
-        android:id="@+id/homeFragBlur"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#fff"

@@ -1,12 +1,13 @@
 package com.pebbletechsolutions.memegenrator.data.model
 
-class FdbMemeModel{
-    var image: String ? = null
+class FdbMemeModel {
+    var image: String? = null
 
-    constructor(){}
+    constructor() {}
 
-    constructor(image: String){
+    constructor(image: String) {
         this.image = image
     }
 }
+
 

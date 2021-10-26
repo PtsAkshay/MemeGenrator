@@ -1,52 +1,36 @@
 package com.pebbletechsolutions.memegenrator.ui.main.view.Fragemes
 
-import android.app.Activity.RESULT_OK
-import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.fragment.app.FragmentResultListener
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.pebbletechsolutions.memegenrator.R
 import com.pebbletechsolutions.memegenrator.databinding.FragmentItemViewBottomSheetBinding
-import androidx.annotation.NonNull
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.startActivity
+import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
+import com.pebbletechsolutions.memegenrator.data.model.FavModel
+import com.pebbletechsolutions.memegenrator.data.model.FavListViewModel
 import com.pebbletechsolutions.memegenrator.ui.main.view.EditorActivity
-import com.pebbletechsolutions.memegenrator.ui.main.view.ResultActivity
-import com.pebbletechsolutions.memegenrator.utils.bottomSheetButtonClick
-import com.theartofdev.edmodo.cropper.CropImage
 
 
 class ItemViewBottomSheetFrag : BottomSheetDialogFragment() {
 
-
-
-
-
-
-
+    var ImgRs: String = ""
+    private lateinit var favVM: FavListViewModel
 
     private var bottomSheetBind: FragmentItemViewBottomSheetBinding? = null
     private val bsBind get() = bottomSheetBind
-    var ImgUri: String = ""
     private lateinit var passMore: Bundle
+    val fragFav = FavouriteFrag()
+    var favList: ArrayList<FavModel> = arrayListOf<FavModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
+        favVM = ViewModelProvider(this).get(FavListViewModel::class.java)
 
 //        requireActivity().supportFragmentManager.setFragmentResultListener("fromHomeFrag",
 //            viewLifecycleOwner, { requestKey, result ->
@@ -58,9 +42,10 @@ class ItemViewBottomSheetFrag : BottomSheetDialogFragment() {
 
         parentFragmentManager.setFragmentResultListener("fromHomeFrag", this, FragmentResultListener { requestKey, result ->
 
-            ImgUri = result.get("HomeFragList").toString()
-            Log.e("immm", ImgUri)
-            Glide.with(requireContext()).load(ImgUri).into(bottomSheetBind!!.bsMemeImg)
+            ImgRs = result.get("HomeFragList").toString()
+            Log.e("immm", ImgRs.toString())
+//            bottomSheetBind!!.bsMemeImg.setImageResource(ImgRs)
+            Glide.with(requireContext()).load(ImgRs).into(bottomSheetBind!!.bsMemeImg)
         })
 
     }
@@ -74,14 +59,24 @@ class ItemViewBottomSheetFrag : BottomSheetDialogFragment() {
         bottomSheetBind = FragmentItemViewBottomSheetBinding.inflate(inflater, container, false)
         val view = bsBind?.root
 
+
+
+
+
         bottomSheetBind!!.bsBtnEdit.setOnClickListener {
 
            var inte = Intent(requireContext(), EditorActivity::class.java)
-            inte.putExtra("fromHomeBs", ImgUri)
+            inte.putExtra("fromHomeBs", ImgRs)
             startActivity(inte)
 
 
         }
+
+        bottomSheetBind!!.bsBtnAddToFav.setOnClickListener {
+//            favList.add(FavImageModel(ImgRs))
+            favVM.insertFavrtImg(FavModel(ImgRs))
+        }
+
 
 
 
@@ -91,19 +86,9 @@ class ItemViewBottomSheetFrag : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "ItemBottomSheet"
+        const val IMAGE_URL = "ADDED_FROM_BOTTOM_SHEET"
     }
 
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-            val result = CropImage.getActivityResult(data)
-            if (resultCode == RESULT_OK) {
-                val resultUri = result.uri
-            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-                val error = result.error
-            }
-        }
-    }
 
 
 
